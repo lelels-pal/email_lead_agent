@@ -1,0 +1,8 @@
+.env
+.pycache/
+.venv/
+__pycache__/
+*.pyc
+playwright/.auth/
+.codex
+.skills

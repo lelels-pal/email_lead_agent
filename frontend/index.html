@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Email Lead Agent</title>
+    <meta
+      name="description"
+      content="A minimalist frontend for reviewing unread emails, qualifying leads, and drafting replies with an AI-assisted email lead agent."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="site-shell">
+      <header class="site-header">
+        <a class="brand" href="./index.html">
+          <span class="brand-mark">ELA</span>
+          <span>
+            <strong>Email Lead Agent</strong>
+            <small>Inbox triage for B2B teams</small>
+          </span>
+        </a>
+        <nav class="site-nav">
+          <a href="#workflow">Workflow</a>
+          <a href="#features">Features</a>
+          <a href="#workspace">Workspace</a>
+        </nav>
+        <div class="site-actions">
+          <a class="button button-secondary" href="./workspace.html">Open workspace</a>
+        </div>
+      </header>
+
+      <main>
+        <section class="hero">
+          <div class="hero-copy">
+            <span class="eyebrow">
+              <span class="eyebrow-dot"></span>
+              Gmail + Playwright + OpenRouter
+            </span>
+            <h1>Turn unread emails into qualified leads and polished reply drafts.</h1>
+            <p class="hero-body">
+              This frontend gives your email lead agent a calm operational layer:
+              review messages, inspect lead scores, and check suggested replies
+              before anything reaches a customer inbox.
+            </p>
+            <div class="hero-actions">
+              <a class="button button-primary" href="./workspace.html">Launch workspace</a>
+              <a class="button button-secondary" href="#workflow">See how it works</a>
+            </div>
+            <div class="hero-metrics">
+              <article>
+                <strong>Strict lead scoring</strong>
+                <span>1 to 10 qualification model with structured JSON output.</span>
+              </article>
+              <article>
+                <strong>Draft-first workflow</strong>
+                <span>Safe review path before a reply is sent from Gmail.</span>
+              </article>
+              <article>
+                <strong>Operator clarity</strong>
+                <span>Readable queue, reasons, scores, and reply previews in one place.</span>
+              </article>
+            </div>
+          </div>
+
+          <div class="hero-preview">
+            <div class="preview-window">
+              <div class="preview-bar">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <div class="preview-panel">
+                <div class="preview-card preview-card-primary">
+                  <div class="preview-head">
+                    <p>Unread queue</p>
+                    <span class="badge badge-accent">3 high intent</span>
+                  </div>
+                  <div class="mail-item selected">
+                    <div>
+                      <strong>Marta | Northline Logistics</strong>
+                      <p>Need pricing for a 12-seat customer support rollout</p>
+                    </div>
+                    <span class="score-pill">9</span>
+                  </div>
+                  <div class="mail-item">
+                    <div>
+                      <strong>Jordan | Acme Ops</strong>
+                      <p>Question about Slack integration and pilot timing</p>
+                    </div>
+                    <span class="score-pill score-pill-muted">7</span>
+                  </div>
+                </div>
+
+                <div class="preview-card">
+                  <div class="preview-head">
+                    <p>Lead evaluation</p>
+                    <span class="badge badge-success">Lead</span>
+                  </div>
+                  <dl class="inline-stats">
+                    <div>
+                      <dt>Score</dt>
+                      <dd>9/10</dd>
+                    </div>
+                    <div>
+                      <dt>Timeline</dt>
+                      <dd>30 days</dd>
+                    </div>
+                    <div>
+                      <dt>Channel</dt>
+                      <dd>Draft</dd>
+                    </div>
+                  </dl>
+                  <p class="preview-reason">
+                    Buying intent is clear: company context, team size, timeframe,
+                    and pricing request are all present.
+                  </p>
+                </div>
+
+                <div class="preview-card preview-card-wide">
+                  <div class="preview-head">
+                    <p>Suggested reply</p>
+                    <span class="badge">2 sentences</span>
+                  </div>
+                  <p class="preview-reply">
+                    Thanks for reaching out, Marta. We can support a 12-seat rollout and would
+                    be happy to share pricing plus a short demo tailored to your support team.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="content-grid" id="workflow">
+          <div class="section-heading">
+            <span class="eyebrow">Workflow</span>
+            <h2>Built around the actual agent loop.</h2>
+          </div>
+
+          <div class="workflow-grid">
+            <article class="panel">
+              <span class="step-index">01</span>
+              <h3>Read unread Gmail messages</h3>
+              <p>
+                The agent signs in, opens the inbox, and extracts sender,
+                subject, and message body from the first unread email.
+              </p>
+            </article>
+            <article class="panel">
+              <span class="step-index">02</span>
+              <h3>Evaluate buying intent</h3>
+              <p>
+                The lead evaluator returns a structured score, a conservative
+                lead decision, concise reasoning, and a two-sentence reply draft.
+              </p>
+            </article>
+            <article class="panel">
+              <span class="step-index">03</span>
+              <h3>Review and act</h3>
+              <p>
+                Operators can quickly validate the score, inspect the reply,
+                and keep the workflow in draft mode for safer demos and internal use.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="content-grid" id="features">
+          <div class="section-heading">
+            <span class="eyebrow">Features</span>
+            <h2>Minimal surface area, strong operational signal.</h2>
+          </div>
+
+          <div class="feature-grid">
+            <article class="panel feature-panel">
+              <h3>Lead score visibility</h3>
+              <p>
+                Show lead quality without hiding the reasoning. Operators can
+                tell at a glance why a message is worth follow-up.
+              </p>
+            </article>
+            <article class="panel feature-panel">
+              <h3>Draft-first safety</h3>
+              <p>
+                Keep replies staged as drafts so teams can audit suggestions
+                before the browser automation presses send.
+              </p>
+            </article>
+            <article class="panel feature-panel">
+              <h3>Inbox-to-reply continuity</h3>
+              <p>
+                Queue, qualification, and reply composer stay in one interface
+                so the review flow feels production-ready rather than experimental.
+              </p>
+            </article>
+            <article class="panel feature-panel">
+              <h3>Demo-friendly presentation</h3>
+              <p>
+                The frontend mirrors a real operator console, which makes the
+                project easier to demo, extend, and explain to collaborators.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="workspace-callout" id="workspace">
+          <div class="workspace-copy">
+            <span class="eyebrow">Workspace</span>
+            <h2>Open the operator view and test the full frontend locally.</h2>
+            <p>
+              The workspace page includes a lead queue, evaluation details,
+              reply composer, and activity feed tailored to the email lead agent.
+            </p>
+          </div>
+          <a class="button button-primary" href="./workspace.html">Open operator workspace</a>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "email-lead-agent"
+version = "0.1.0"
+description = "Headless Gmail reader for lead qualification workflows."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "langchain>=0.3.0,<0.4.0",
+    "langchain-openrouter>=0.1.0,<0.2.0",
+    "playwright>=1.52.0,<2.0.0",
+    "python-dotenv>=1.0.1,<2.0.0",
+]
+
+[project.scripts]
+read-gmail = "email_lead_agent.gmail_reader:cli"
+evaluate-email = "email_lead_agent.lead_evaluator:cli"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
