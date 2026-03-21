@@ -1,0 +1,4 @@
+langchain-core<2.0.0,>=1.2.13
+langchain-openrouter<0.2.0,>=0.1.0
+playwright<2.0.0,>=1.52.0
+python-dotenv<2.0.0,>=1.0.1

@@ -1,0 +1,3 @@
+[console_scripts]
+evaluate-email = email_lead_agent.lead_evaluator:cli
+read-gmail = email_lead_agent.gmail_reader:cli

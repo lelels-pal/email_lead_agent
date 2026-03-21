@@ -14,12 +14,12 @@
       href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="/static/styles.css" />
   </head>
   <body>
     <div class="site-shell">
       <header class="site-header">
-        <a class="brand" href="./index.html">
+        <a class="brand" href="/">
           <span class="brand-mark">ELA</span>
           <span>
             <strong>Email Lead Agent</strong>
@@ -32,7 +32,7 @@
           <a href="#workspace">Workspace</a>
         </nav>
         <div class="site-actions">
-          <a class="button button-secondary" href="./workspace.html">Open workspace</a>
+          <a class="button button-secondary" href="/workspace">Open workspace</a>
         </div>
       </header>
 
@@ -50,7 +50,7 @@
               before anything reaches a customer inbox.
             </p>
             <div class="hero-actions">
-              <a class="button button-primary" href="./workspace.html">Launch workspace</a>
+              <a class="button button-primary" href="/workspace">Launch workspace</a>
               <a class="button button-secondary" href="#workflow">See how it works</a>
             </div>
             <div class="hero-metrics">
@@ -215,11 +215,11 @@
             <span class="eyebrow">Workspace</span>
             <h2>Open the operator view and test the full frontend locally.</h2>
             <p>
-              The workspace page includes a lead queue, evaluation details,
-              reply composer, and activity feed tailored to the email lead agent.
+              The workspace page now connects to a live Python API so operators can
+              scan unread Gmail messages, inspect lead scores, and stage drafts from one surface.
             </p>
           </div>
-          <a class="button button-primary" href="./workspace.html">Open operator workspace</a>
+          <a class="button button-primary" href="/workspace">Open operator workspace</a>
         </section>
       </main>
     </div>

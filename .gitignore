@@ -1,8 +1,11 @@
 .env
 .pycache/
+.playwright-browsers/
 .venv/
 __pycache__/
 *.pyc
 playwright/.auth/
 .codex
 .skills
+.kilocodemodes
+.kilocode

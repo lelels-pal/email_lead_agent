@@ -1,3 +1,14 @@
+Metadata-Version: 2.4
+Name: email-lead-agent
+Version: 0.1.0
+Summary: Headless Gmail reader for lead qualification workflows.
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: langchain-core<2.0.0,>=1.2.13
+Requires-Dist: langchain-openrouter<0.2.0,>=0.1.0
+Requires-Dist: playwright<2.0.0,>=1.52.0
+Requires-Dist: python-dotenv<2.0.0,>=1.0.1
+
 # Email Lead Agent
 
 A headless Gmail reader for B2B software lead qualification workflows. This agent automatically reads unread emails from your Gmail inbox, evaluates them using AI to determine if they represent legitimate business leads, and drafts professional replies for qualified leads.
@@ -7,7 +18,7 @@ A headless Gmail reader for B2B software lead qualification workflows. This agen
 - **Automated Gmail Reading**: Uses Playwright to headlessly log into Gmail and extract email content
 - **AI-Powered Lead Evaluation**: Leverages LangChain Core and OpenRouter to score emails on a 1-10 scale based on B2B software buying intent
 - **Smart Reply Drafting**: Automatically drafts professional 2-sentence replies for qualified leads
-- **Live Operator Workspace**: Includes a frontend served by FastAPI so the queue, draft actions, and activity feed use the real Python agent
+- **Interactive Frontend**: Includes a web-based interface for product overview and operator workspace
 - **CLI Tools**: Command-line utilities for quick email reading and evaluation
 
 ## Prerequisites
@@ -26,8 +37,8 @@ A headless Gmail reader for B2B software lead qualification workflows. This agen
 
 2. **Create and activate a virtual environment**
    ```bash
-   python3 -m venv .venv
-   source .venv/bin/activate
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
 3. **Install the project in editable mode**
@@ -37,7 +48,7 @@ A headless Gmail reader for B2B software lead qualification workflows. This agen
 
 4. **Install Chromium for Playwright**
    ```bash
-   PLAYWRIGHT_BROWSERS_PATH="$PWD/.playwright-browsers" python -m playwright install chromium
+   playwright install chromium
    ```
 
 ## Configuration
@@ -108,23 +119,18 @@ async def main():
 asyncio.run(main())
 ```
 
-### Live Workspace
+### Frontend
 
-The frontend is now served by the Python app itself and talks to live API routes:
+A web-based frontend is included for product overview and operator workspace:
 
-1. **Start the app server**
+1. **Start the local server:**
    ```bash
-   PLAYWRIGHT_BROWSERS_PATH="$PWD/.playwright-browsers" serve-email-agent
+   python -m http.server 8000 -d frontend
    ```
 
-2. **Open in your browser**
-   - Product Overview: http://127.0.0.1:8000/
-   - Operator Workspace: http://127.0.0.1:8000/workspace
-
-3. **Use the workspace**
-   - Click **Scan unread email** to open Gmail, inspect the first unread message, and score it.
-   - Leave **Auto-draft qualified leads** on if you want the agent to save the reply immediately.
-   - Use **Save draft**, **Mark for review**, or **Archive** once the current email is loaded.
+2. **Open in your browser:**
+   - Product Overview: http://localhost:8000/
+   - Operator Workspace: http://localhost:8000/workspace.html
 
 ## Project Structure
 
@@ -133,8 +139,6 @@ email_lead_agent/
 ├── src/
 │   └── email_lead_agent/
 │       ├── __init__.py          # Package exports
-│       ├── agent_service.py     # Reusable Gmail + Playwright session logic
-│       ├── api.py               # FastAPI app serving the frontend and JSON API
 │       ├── gmail_reader.py      # Gmail automation with Playwright
 │       └── lead_evaluator.py    # AI-powered lead evaluation
 ├── frontend/
@@ -173,10 +177,8 @@ The AI evaluator uses strict B2B software sales criteria:
 
 - **langchain-core**: Prompt and runnable primitives used by the evaluator
 - **langchain-openrouter**: OpenRouter integration for LangChain
-- **fastapi**: Local API layer for the live operator workspace
 - **playwright**: Browser automation for Gmail interaction
 - **python-dotenv**: Environment variable management
-- **uvicorn**: ASGI server used to run the app locally
 
 ## Development
 

@@ -14,12 +14,12 @@
       href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="/static/styles.css" />
   </head>
   <body class="workspace-body">
     <div class="workspace-shell" data-workspace-app>
       <aside class="workspace-sidebar">
-        <a class="brand" href="./index.html">
+        <a class="brand" href="/">
           <span class="brand-mark">ELA</span>
           <span>
             <strong>Email Lead Agent</strong>
@@ -35,11 +35,11 @@
         </nav>
 
         <div class="sidebar-card">
-          <p class="sidebar-label">Automation status</p>
-          <h3>Draft-first mode enabled</h3>
+          <p class="sidebar-label">Live operator mode</p>
+          <h3>Quiet SaaS control layer</h3>
           <p>
-            Replies are prepared in Gmail drafts so a human can inspect the
-            evaluation before sending.
+            Use the workspace to scan the first unread Gmail message, review a strict
+            B2B score, and decide whether a reply should remain a draft, be reviewed, or be archived.
           </p>
         </div>
       </aside>
@@ -50,14 +50,36 @@
             <span class="eyebrow">Live review queue</span>
             <h1>Email qualification workspace</h1>
             <p>
-              Review unread messages, inspect structured lead evaluations, and
-              keep outbound replies consistent and safe.
+              Review unread Gmail messages, inspect structured lead evaluations,
+              and keep outbound replies consistent and draft-first.
             </p>
           </div>
-          <div class="workspace-header-actions">
-            <a class="button button-secondary" href="./index.html">Back to overview</a>
+          <div class="workspace-toolbar">
+            <label class="toggle">
+              <input type="checkbox" data-auto-draft />
+              <span>Auto-draft qualified leads</span>
+            </label>
+            <div class="workspace-header-actions">
+              <button class="button button-primary" type="button" data-run-scan>
+                Scan unread email
+              </button>
+              <button class="button button-secondary" type="button" data-close-session>
+                Close browser
+              </button>
+            </div>
           </div>
         </header>
+
+        <section class="status-ribbon panel">
+          <div>
+            <span class="panel-label">Session</span>
+            <strong data-session-indicator>Idle</strong>
+          </div>
+          <p data-status-copy>
+            Start with a live scan to pull the first unread Gmail message into the queue.
+          </p>
+          <p class="status-error" data-error-text hidden></p>
+        </section>
 
         <section class="kpi-grid">
           <article class="kpi-card">
@@ -135,13 +157,18 @@
 
               <div class="detail-block">
                 <span class="detail-label">Suggested reply</span>
-                <textarea class="reply-editor" data-reply-editor rows="6"></textarea>
+                <textarea
+                  class="reply-editor"
+                  data-reply-editor
+                  rows="6"
+                  placeholder="Lead-qualified replies will appear here."
+                ></textarea>
               </div>
 
               <div class="detail-actions">
-                <button class="button button-primary" data-action="draft">Save draft</button>
-                <button class="button button-secondary" data-action="review">Mark for review</button>
-                <button class="button button-secondary" data-action="archive">Archive</button>
+                <button class="button button-primary" type="button" data-action="draft">Save draft</button>
+                <button class="button button-secondary" type="button" data-action="review">Mark for review</button>
+                <button class="button button-secondary" type="button" data-action="archive">Archive</button>
               </div>
             </section>
 
@@ -159,6 +186,6 @@
       </main>
     </div>
 
-    <script src="./app.js"></script>
+    <script src="/static/app.js"></script>
   </body>
 </html>

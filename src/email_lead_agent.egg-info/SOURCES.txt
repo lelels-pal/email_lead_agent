@@ -1,0 +1,11 @@
+README.md
+pyproject.toml
+src/email_lead_agent/__init__.py
+src/email_lead_agent/gmail_reader.py
+src/email_lead_agent/lead_evaluator.py
+src/email_lead_agent.egg-info/PKG-INFO
+src/email_lead_agent.egg-info/SOURCES.txt
+src/email_lead_agent.egg-info/dependency_links.txt
+src/email_lead_agent.egg-info/entry_points.txt
+src/email_lead_agent.egg-info/requires.txt
+src/email_lead_agent.egg-info/top_level.txt

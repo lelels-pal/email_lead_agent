@@ -1,132 +1,203 @@
-const emails = [
-  {
-    id: "northline-logistics",
-    sender: "Marta Castillo <marta@northline-logistics.com>",
-    subject: "Need pricing for a 12-seat rollout next month",
-    body:
-      "Hi team, we are reviewing tools for our customer support operation and need pricing for around 12 seats. If your product supports Gmail-based triage and Slack notifications, we would like to see a short demo and understand onboarding time this month.",
-    score: 9,
-    isLead: true,
-    status: "draft",
-    reasoning:
-      "Clear B2B buying intent is present: team size, use case, timeline, and a direct request for pricing plus a demo.",
-    reply:
-      "Thanks for reaching out, Marta. We can support a 12-seat rollout and would be happy to share pricing along with a short demo tailored to your support workflow.",
-    stageLabel: "Qualified lead",
-  },
-  {
-    id: "acme-ops",
-    sender: "Jordan Lee <jordan@acmeops.io>",
-    subject: "Question about Slack integration and a pilot",
-    body:
-      "We are exploring whether your lead qualification flow could help our outbound team handle inbound requests. Can you confirm whether alerts can be reviewed in Slack and whether we could run a small pilot for our revops team in the next few weeks?",
-    score: 7,
-    isLead: true,
-    status: "review",
-    reasoning:
-      "The sender shows plausible buying intent and a clear software use case, but the scope and decision process still need confirmation.",
-    reply:
-      "Thanks for the note, Jordan. Yes, we can support a pilot workflow and would be glad to walk through how Slack review fits into an inbound qualification process for your revops team.",
-    stageLabel: "Needs review",
-  },
-  {
-    id: "helpdesk-support",
-    sender: "Dana Rivers <dana@helpdesksupport.net>",
-    subject: "Issue with an old sample account",
-    body:
-      "Hello, I found an older sample login from a talk and wanted to ask if that environment is still active. If not, could you point me to the current documentation?",
-    score: 3,
-    isLead: false,
-    status: "review",
-    reasoning:
-      "This message reads as a support request and does not contain real purchase intent, budget, or evaluation context.",
-    reply:
-      "Thanks for reaching out, Dana. That request looks closer to a support question, so please check the latest documentation and reply with any account details if you still need help.",
-    stageLabel: "Needs review",
-  },
-  {
-    id: "vendor-pitch",
-    sender: "Leo Hart <leo@growthvector.ai>",
-    subject: "Can we partner on outreach automation?",
-    body:
-      "We help software teams improve outbound performance and would love to explore a partnership. Let us know if you want to trade intros or co-market a workflow.",
-    score: 2,
-    isLead: false,
-    status: "archived",
-    reasoning:
-      "The email is a partnership pitch rather than an inbound software buying inquiry.",
-    reply:
-      "Thanks for reaching out, Leo. At the moment we are focused on product evaluation inquiries, so we are not moving forward with partnership discussions from this inbox.",
-    stageLabel: "Archived",
-  },
-];
-
-const activity = [
-  {
-    title: "Reply draft prepared",
-    body: "Northline Logistics was scored 9/10 and saved to Gmail drafts.",
-    time: "2 min ago",
-  },
-  {
-    title: "Manual review requested",
-    body: "Acme Ops was kept in review because decision authority is still unclear.",
-    time: "8 min ago",
-  },
-  {
-    title: "Support request detected",
-    body: "Helpdesk Support was classified as non-lead and held for review.",
-    time: "14 min ago",
-  },
-];
-
 const state = {
-  selectedId: emails[0]?.id ?? null,
+  emails: [],
+  activity: [],
+  selectedId: null,
   filter: "all",
+  autoDraft: false,
+  sessionActive: false,
+  loadingAction: null,
+  error: "",
+  statusCopy: "Start with a live scan to pull the first unread Gmail message into the queue.",
 };
+
+async function apiRequest(path, options = {}) {
+  const response = await fetch(path, {
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers ?? {}),
+    },
+    ...options,
+  });
+
+  const contentType = response.headers.get("content-type") || "";
+  const payload = contentType.includes("application/json") ? await response.json() : null;
+
+  if (!response.ok) {
+    const message = payload?.detail || "The workspace could not complete that request.";
+    throw new Error(message);
+  }
+
+  return payload;
+}
+
+function setLoading(action) {
+  state.loadingAction = action;
+  render(appRoot);
+}
+
+function clearLoading() {
+  state.loadingAction = null;
+  render(appRoot);
+}
+
+function selectedEmail() {
+  return state.emails.find((email) => email.id === state.selectedId) ?? null;
+}
 
 function getVisibleEmails() {
   if (state.filter === "lead") {
-    return emails.filter((email) => email.isLead && email.status !== "archived");
+    return state.emails.filter((email) => email.is_lead && email.status !== "archived");
   }
 
   if (state.filter === "review") {
-    return emails.filter((email) => email.status === "review");
+    return state.emails.filter((email) => email.status === "review");
   }
 
-  return emails;
+  return state.emails;
+}
+
+function syncWorkspace(data) {
+  state.emails = data.emails ?? [];
+  state.activity = data.activity ?? [];
+  state.sessionActive = data.session_active ?? false;
+  state.selectedId = data.selected_id || state.emails[0]?.id || null;
+}
+
+async function loadWorkspace() {
+  setLoading("bootstrap");
+  try {
+    const data = await apiRequest("/api/workspace");
+    syncWorkspace(data);
+    state.error = "";
+    state.statusCopy =
+      state.emails.length > 0
+        ? "The operator queue reflects the latest live Gmail snapshot."
+        : "Start with a live scan to pull the first unread Gmail message into the queue.";
+  } catch (error) {
+    state.error = error.message;
+  } finally {
+    clearLoading();
+  }
+}
+
+async function runAction(action, request) {
+  setLoading(action);
+  try {
+    const payload = await request();
+    if (payload?.emails) {
+      syncWorkspace(payload);
+    } else {
+      const refreshed = await apiRequest("/api/workspace");
+      syncWorkspace(refreshed);
+    }
+    state.error = "";
+    return payload;
+  } catch (error) {
+    state.error = error.message;
+    throw error;
+  } finally {
+    clearLoading();
+  }
+}
+
+async function scanInbox() {
+  await runAction("scan", async () => {
+    const result = await apiRequest("/api/agent/scan", {
+      method: "POST",
+      body: JSON.stringify({ auto_draft_if_lead: state.autoDraft }),
+    });
+
+    state.statusCopy = result.status === "draft"
+      ? "A qualified lead was found and the reply was saved as a Gmail draft."
+      : "A live email was scanned and is ready for operator review.";
+    return result;
+  });
+}
+
+async function saveDraft() {
+  const email = selectedEmail();
+  const editor = appRoot.querySelector("[data-reply-editor]");
+
+  if (!email || !editor) {
+    return;
+  }
+
+  await runAction("draft", async () => {
+    const result = await apiRequest("/api/agent/draft", {
+      method: "POST",
+      body: JSON.stringify({ reply_text: editor.value.trim() }),
+    });
+
+    state.statusCopy = "The reply was saved to Gmail drafts for final human review.";
+    return result;
+  });
+}
+
+async function markForReview() {
+  await runAction("review", async () => {
+    const result = await apiRequest("/api/agent/review", { method: "POST", body: "{}" });
+    state.statusCopy = "The current email was held in the queue for a human decision.";
+    return result;
+  });
+}
+
+async function archiveEmail() {
+  await runAction("archive", async () => {
+    const result = await apiRequest("/api/agent/archive", { method: "POST", body: "{}" });
+    state.statusCopy = "The current email was archived from Gmail.";
+    return result;
+  });
+}
+
+async function closeSession() {
+  await runAction("close", async () => {
+    await apiRequest("/api/agent/close", { method: "POST", body: "{}" });
+    state.statusCopy = "The Playwright Gmail session was closed.";
+    return null;
+  });
 }
 
 function updateStats(root) {
   root.querySelector("[data-stat-unread]").textContent = String(
-    emails.filter((email) => email.status !== "archived").length,
+    state.emails.filter((email) => email.status !== "archived").length,
   );
   root.querySelector("[data-stat-leads]").textContent = String(
-    emails.filter((email) => email.isLead).length,
+    state.emails.filter((email) => email.is_lead).length,
   );
   root.querySelector("[data-stat-drafts]").textContent = String(
-    emails.filter((email) => email.status === "draft").length,
+    state.emails.filter((email) => email.status === "draft").length,
   );
   root.querySelector("[data-stat-archived]").textContent = String(
-    emails.filter((email) => email.status === "archived").length,
+    state.emails.filter((email) => email.status === "archived").length,
   );
 }
 
 function scoreClass(score) {
   if (score >= 8) return "score-pill";
-  if (score >= 5) return "score-pill score-pill-muted";
   return "score-pill score-pill-muted";
 }
 
 function statusTag(email) {
+  if (email.status === "draft") {
+    return '<span class="tag tag-lead">Draft ready</span>';
+  }
+
   if (email.status === "archived") {
     return '<span class="tag tag-neutral">Archived</span>';
   }
 
-  if (email.isLead && email.status === "draft") {
-    return '<span class="tag tag-lead">Draft ready</span>';
+  if (email.is_lead) {
+    return '<span class="tag tag-lead">Qualified lead</span>';
   }
 
-  return '<span class="tag tag-review">Manual review</span>';
+  return '<span class="tag tag-review">Needs review</span>';
+}
+
+function detailBadge(email) {
+  if (!email) return { text: "Waiting", className: "badge" };
+  if (email.status === "draft") return { text: "Draft", className: "badge badge-success" };
+  if (email.status === "archived") return { text: "Archived", className: "badge" };
+  return { text: email.is_lead ? "Lead" : "Review", className: `badge ${email.is_lead ? "badge-success" : ""}`.trim() };
 }
 
 function renderMailList(root) {
@@ -135,6 +206,18 @@ function renderMailList(root) {
 
   if (!visibleEmails.some((email) => email.id === state.selectedId)) {
     state.selectedId = visibleEmails[0]?.id ?? null;
+  }
+
+  if (visibleEmails.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <strong>No live emails yet</strong>
+        <p>Run a scan to bring the first unread Gmail message into this queue.</p>
+        <button class="button button-primary" type="button" data-empty-scan>Scan unread email</button>
+      </div>
+    `;
+    container.querySelector("[data-empty-scan]")?.addEventListener("click", scanInbox);
+    return;
   }
 
   container.innerHTML = visibleEmails
@@ -146,10 +229,10 @@ function renderMailList(root) {
             <span class="${scoreClass(email.score)}">${email.score}</span>
           </div>
           <p class="mail-card-subject">${email.subject}</p>
-          <p class="mail-card-snippet">${email.body.slice(0, 118)}...</p>
+          <p class="mail-card-snippet">${email.body.slice(0, 118)}${email.body.length > 118 ? "..." : ""}</p>
           <div class="mail-card-tags">
             ${statusTag(email)}
-            <span class="tag tag-neutral">${email.stageLabel}</span>
+            <span class="tag tag-neutral">${email.action_taken.replaceAll("_", " ")}</span>
           </div>
         </button>
       `,
@@ -165,66 +248,72 @@ function renderMailList(root) {
 }
 
 function renderDetails(root) {
-  const selected = emails.find((email) => email.id === state.selectedId);
-  if (!selected) return;
-
-  root.querySelector("[data-detail-subject]").textContent = selected.subject;
-  root.querySelector("[data-detail-sender]").textContent = selected.sender;
-  root.querySelector("[data-detail-score]").textContent = `${selected.score}/10`;
-  root.querySelector("[data-detail-decision]").textContent = selected.isLead ? "Lead" : "Not a lead";
-  root.querySelector("[data-detail-reasoning]").textContent = selected.reasoning;
-  root.querySelector("[data-detail-body]").textContent = selected.body;
-
+  const email = selectedEmail();
   const badge = root.querySelector("[data-detail-badge]");
-  badge.textContent = selected.isLead ? "Lead" : "Review";
-  badge.className = `badge ${selected.isLead ? "badge-success" : ""}`;
-
   const editor = root.querySelector("[data-reply-editor]");
-  editor.value = selected.reply;
+  const buttons = root.querySelectorAll("[data-action]");
 
-  root.querySelectorAll("[data-action]").forEach((button) => {
-    button.onclick = () => {
+  if (!email) {
+    root.querySelector("[data-detail-subject]").textContent = "Select an email";
+    root.querySelector("[data-detail-sender]").textContent = "—";
+    root.querySelector("[data-detail-score]").textContent = "—";
+    root.querySelector("[data-detail-decision]").textContent = "—";
+    root.querySelector("[data-detail-reasoning]").textContent =
+      "Run a live scan to inspect the structured evaluation.";
+    root.querySelector("[data-detail-body]").textContent =
+      "The Gmail message body will appear here after the first unread email is scanned.";
+    badge.textContent = "Waiting";
+    badge.className = "badge";
+    editor.value = "";
+    buttons.forEach((button) => {
+      button.disabled = true;
+    });
+    return;
+  }
+
+  root.querySelector("[data-detail-subject]").textContent = email.subject;
+  root.querySelector("[data-detail-sender]").textContent = email.sender;
+  root.querySelector("[data-detail-score]").textContent = `${email.score}/10`;
+  root.querySelector("[data-detail-decision]").textContent = email.is_lead ? "Lead" : "Not a lead";
+  root.querySelector("[data-detail-reasoning]").textContent = email.reasoning;
+  root.querySelector("[data-detail-body]").textContent = email.body;
+
+  const nextBadge = detailBadge(email);
+  badge.textContent = nextBadge.text;
+  badge.className = nextBadge.className;
+  editor.value = email.suggested_reply;
+
+  buttons.forEach((button) => {
+    button.disabled = Boolean(state.loadingAction);
+    button.onclick = async () => {
       const action = button.getAttribute("data-action");
       if (action === "draft") {
-        selected.status = "draft";
-        selected.stageLabel = selected.isLead ? "Qualified lead" : "Reply drafted";
-        selected.reply = editor.value;
-        activity.unshift({
-          title: "Draft saved",
-          body: `${selected.sender.split("<")[0].trim()} reply was updated and marked ready for Gmail drafts.`,
-          time: "Just now",
-        });
+        await saveDraft();
       }
-
       if (action === "review") {
-        selected.status = "review";
-        selected.stageLabel = "Needs review";
-        selected.reply = editor.value;
-        activity.unshift({
-          title: "Manual review requested",
-          body: `${selected.sender.split("<")[0].trim()} was kept in the review queue for a human check.`,
-          time: "Just now",
-        });
+        await markForReview();
       }
-
       if (action === "archive") {
-        selected.status = "archived";
-        selected.stageLabel = "Archived";
-        activity.unshift({
-          title: "Email archived",
-          body: `${selected.sender.split("<")[0].trim()} was archived from the lead queue.`,
-          time: "Just now",
-        });
+        await archiveEmail();
       }
-
-      render(root);
     };
   });
 }
 
 function renderActivity(root) {
   const container = root.querySelector("[data-activity-list]");
-  container.innerHTML = activity
+
+  if (state.activity.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state empty-state-subtle">
+        <strong>No activity yet</strong>
+        <p>The timeline will update after the first live scan or operator action.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = state.activity
     .slice(0, 6)
     .map(
       (entry) => `
@@ -253,9 +342,57 @@ function bindFilters(root) {
   });
 }
 
+function bindControls(root) {
+  const runButton = root.querySelector("[data-run-scan]");
+  const closeButton = root.querySelector("[data-close-session]");
+  const toggle = root.querySelector("[data-auto-draft]");
+
+  runButton.textContent = state.loadingAction === "scan" ? "Scanning..." : "Scan unread email";
+  closeButton.textContent = state.loadingAction === "close" ? "Closing..." : "Close browser";
+
+  runButton.disabled = Boolean(state.loadingAction);
+  closeButton.disabled = Boolean(state.loadingAction) || !state.sessionActive;
+
+  toggle.checked = state.autoDraft;
+  toggle.disabled = Boolean(state.loadingAction);
+  toggle.onchange = () => {
+    state.autoDraft = toggle.checked;
+  };
+
+  runButton.onclick = scanInbox;
+  closeButton.onclick = closeSession;
+}
+
+function renderStatus(root) {
+  const indicator = root.querySelector("[data-session-indicator]");
+  const copy = root.querySelector("[data-status-copy]");
+  const error = root.querySelector("[data-error-text]");
+
+  if (state.loadingAction === "scan") {
+    indicator.textContent = "Scanning live inbox";
+  } else if (state.sessionActive) {
+    indicator.textContent = "Browser connected";
+  } else {
+    indicator.textContent = "Idle";
+  }
+
+  copy.textContent = state.statusCopy;
+
+  if (state.error) {
+    error.hidden = false;
+    error.textContent = state.error;
+  } else {
+    error.hidden = true;
+    error.textContent = "";
+  }
+}
+
 function render(root) {
+  if (!root) return;
   updateStats(root);
   bindFilters(root);
+  bindControls(root);
+  renderStatus(root);
   renderMailList(root);
   renderDetails(root);
   renderActivity(root);
@@ -263,5 +400,5 @@ function render(root) {
 
 const appRoot = document.querySelector("[data-workspace-app]");
 if (appRoot) {
-  render(appRoot);
+  loadWorkspace();
 }
